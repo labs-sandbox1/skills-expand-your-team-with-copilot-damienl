@@ -474,8 +474,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to handle social sharing
   function handleShare(activityName, activityDetails, platform) {
-    // Build the share content
-    const url = window.location.href;
+    // Build the share content - use clean URL without hash/query params
+    const baseUrl = window.location.origin + window.location.pathname;
     const schedule = formatSchedule(activityDetails);
     const title = `Join ${activityName} at Mergington High School!`;
     const description = `${activityDetails.description} - ${schedule}`;
@@ -485,7 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
       case "facebook":
         // Facebook share dialog
         const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-          url
+          baseUrl
         )}`;
         window.open(fbUrl, "_blank", "width=600,height=400");
         break;
@@ -495,29 +495,46 @@ document.addEventListener("DOMContentLoaded", () => {
         const tweetText = `${title} ${description}`;
         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
           tweetText
-        )}&url=${encodeURIComponent(url)}`;
+        )}&url=${encodeURIComponent(baseUrl)}`;
         window.open(twitterUrl, "_blank", "width=600,height=400");
         break;
 
       case "email":
-        // Email share
+        // Email share - use window.open to avoid navigating away
         const subject = encodeURIComponent(title);
         const body = encodeURIComponent(
-          `${description}\n\nView more activities at: ${url}`
+          `${description}\n\nView more activities at: ${baseUrl}`
         );
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+        // Try to open in new window, fallback to same window if blocked
+        const mailWindow = window.open(mailtoUrl);
+        if (!mailWindow) {
+          window.location = mailtoUrl;
+        }
         break;
 
       case "copy":
         // Copy link to clipboard
-        const shareText = `${title}\n${description}\n\n${url}`;
+        const shareText = `${title}\n${description}\n\n${baseUrl}`;
+        
+        // Check if clipboard API is available
+        if (!navigator.clipboard) {
+          showMessage("Clipboard not supported in this browser", "error");
+          return;
+        }
+        
         navigator.clipboard
           .writeText(shareText)
           .then(() => {
             showMessage("Link copied to clipboard!", "success");
           })
-          .catch(() => {
-            showMessage("Failed to copy link", "error");
+          .catch((err) => {
+            // Provide more specific error message
+            if (err.name === "NotAllowedError") {
+              showMessage("Permission denied. Please allow clipboard access.", "error");
+            } else {
+              showMessage("Failed to copy link. Please try again.", "error");
+            }
           });
         break;
     }
