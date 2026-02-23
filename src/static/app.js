@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Dark mode toggle
   const darkModeToggle = document.getElementById("dark-mode-toggle");
-  const themeIcon = darkModeToggle.querySelector(".theme-icon");
+  const themeIcon = darkModeToggle ? darkModeToggle.querySelector(".theme-icon") : null;
 
   // Search and filter elements
   const searchInput = document.getElementById("activity-search");
@@ -50,6 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Dark mode functions
   function initializeDarkMode() {
+    if (!darkModeToggle || !themeIcon) return;
+    
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       document.body.classList.add("dark-mode");
@@ -60,6 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toggleDarkMode() {
+    if (!themeIcon) return;
+    
     document.body.classList.toggle("dark-mode");
     const isDarkMode = document.body.classList.contains("dark-mode");
     
@@ -73,7 +77,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Dark mode toggle event listener
-  darkModeToggle.addEventListener("click", toggleDarkMode);
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener("click", toggleDarkMode);
+  }
 
   // Time range mappings for the dropdown
   const timeRanges = {
