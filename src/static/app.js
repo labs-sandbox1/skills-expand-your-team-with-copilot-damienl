@@ -520,11 +520,13 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     // Create difficulty badge (only if difficulty is specified)
-    const difficultyBadge = details.difficulty ? `
-      <span class="difficulty-badge difficulty-${details.difficulty.toLowerCase()}">
-        ${details.difficulty}
-      </span>
-    ` : '';
+    let difficultyBadge = '';
+    if (details.difficulty) {
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = `difficulty-badge difficulty-${details.difficulty.toLowerCase()}`;
+      badgeSpan.textContent = details.difficulty;
+      difficultyBadge = badgeSpan.outerHTML;
+    }
 
     // Create capacity indicator
     const capacityIndicator = `
