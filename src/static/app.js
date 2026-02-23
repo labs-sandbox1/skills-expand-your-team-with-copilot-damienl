@@ -472,6 +472,74 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Function to handle social sharing
+  function handleShare(activityName, activityDetails, platform) {
+    // Build the share content - use clean URL without hash/query params
+    const baseUrl = window.location.origin + window.location.pathname;
+    const schedule = formatSchedule(activityDetails);
+    const title = `Join ${activityName} at Mergington High School!`;
+    const description = `${activityDetails.description} - ${schedule}`;
+    const text = `${title}\n\n${description}`;
+
+    switch (platform) {
+      case "facebook":
+        // Facebook share dialog
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          baseUrl
+        )}`;
+        window.open(fbUrl, "_blank", "width=600,height=400");
+        break;
+
+      case "twitter":
+        // Twitter share dialog
+        const tweetText = `${title} ${description}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          tweetText
+        )}&url=${encodeURIComponent(baseUrl)}`;
+        window.open(twitterUrl, "_blank", "width=600,height=400");
+        break;
+
+      case "email":
+        // Email share - use window.open to avoid navigating away
+        const subject = encodeURIComponent(title);
+        const body = encodeURIComponent(
+          `${description}\n\nView more activities at: ${baseUrl}`
+        );
+        const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+        // Try to open in new window, fallback to same window if blocked
+        const mailWindow = window.open(mailtoUrl);
+        if (!mailWindow) {
+          window.location = mailtoUrl;
+        }
+        break;
+
+      case "copy":
+        // Copy link to clipboard
+        const shareText = `${title}\n${description}\n\n${baseUrl}`;
+        
+        // Check if clipboard API is available
+        if (!navigator.clipboard) {
+          showMessage("Clipboard not supported in this browser", "error");
+          return;
+        }
+        
+        navigator.clipboard
+          .writeText(shareText)
+          .then(() => {
+            showMessage("Link copied to clipboard!", "success");
+          })
+          .catch((err) => {
+            // Provide more specific error message
+            if (err.name === "NotAllowedError") {
+              showMessage("Permission denied. Please allow clipboard access.", "error");
+            } else {
+              showMessage("Failed to copy link. Please try again.", "error");
+            }
+          });
+        break;
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -552,6 +620,21 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="social-share-container">
+        <span class="share-label">Share:</span>
+        <button class="share-button facebook" data-activity="${name}" data-share="facebook" aria-label="Share on Facebook" title="Share on Facebook">
+          📘
+        </button>
+        <button class="share-button twitter" data-activity="${name}" data-share="twitter" aria-label="Share on Twitter" title="Share on Twitter">
+          🐦
+        </button>
+        <button class="share-button email" data-activity="${name}" data-share="email" aria-label="Share via Email" title="Share via Email">
+          ✉️
+        </button>
+        <button class="share-button copy" data-activity="${name}" data-share="copy" aria-label="Copy Link" title="Copy Link">
+          📋
+        </button>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -586,6 +669,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll("[data-share]");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const platform = button.dataset.share;
+        handleShare(name, details, platform);
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
